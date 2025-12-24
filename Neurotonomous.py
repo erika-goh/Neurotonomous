@@ -34,3 +34,45 @@ class QNetwork(nn.Module): # Q-Network for 5 sensors and 3 actions (PyTorch)
         x = torch.relu(self.fc2(x)) # relu takes max(0, x) for each element in tensor and sets negative values to 0
         return self.fc3(x) # output layer with highest Q-value is the best Q-action to take
 
+class Car: # this class represents the AI car and its actions
+    def __init__(self, x, y, angle=0):
+        self.x = x # constructor for new car
+        self.y = y
+        self.angle = angle  
+        self.speed = 0
+
+    def accelerate(self): # called to increase speed (no braking system)
+        self.speed = min(self.speed + ACCEL, MAX_SPEED)
+
+    def turn_left(self): # called for turning left
+        self.angle -= TURN_RATE
+
+    def turn_right(self): # called for turning right
+        self.angle += TURN_RATE
+
+    def update(self): # called to update car position based on angle and speed
+        rad = math.radians(self.angle)
+        self.x += self.speed * math.cos(rad)
+        self.y += self.speed * math.sin(rad)
+        self.x %= WIDTH # wrap around screen edges
+        self.y %= HEIGHT
+
+    def get_sensor_readings(self, screen, obstacles):
+        readings = []
+        for offset in SENSOR_ANGLES: 
+            dist = SENSOR_LENGTH
+            for d in range(1, SENSOR_LENGTH + 1, 5): # casts a ray forward - checking pixels every 5 steps up to 150 pixels
+                rad = math.radians(self.angle + offset)
+                sx = int(self.x + d * math.cos(rad))
+                sy = int(self.y + d * math.sin(rad))
+                if 0 <= sx < WIDTH and 0 <= sy < HEIGHT: 
+                    color = screen.get_at((sx, sy))[:3]
+                    if color == WHITE: # as soon as it hits a white pixel/obstacle it stops and records how far it got
+                        dist = d
+                        break
+            readings.append(dist / SENSOR_LENGTH) # returns a list of 5 numbers between 0 and 1 (1 = obstacle, 0 = nothing) 
+                                                # the 5 numbers are what the QNetwork uses as input
+        return readings
+
+
+
