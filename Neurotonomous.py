@@ -137,14 +137,12 @@ def main():
                 title = False
 
     model = QNetwork() # create Q-Network brain
-    optimizer = optim.Adam(model.parameters(), lr=0.001) # Adam optimizer
-    replay_buffer = deque(maxlen=10000) # replay buffer to store 10000 learning experiences
+    optimizer = optim.Adam(model.parameters(), lr=0.005) 
+    replay_buffer = deque(maxlen=50000)  # replay buffer to store 50000 learning experiences
     epsilon = 1.0 # starts with full random actions then becomes less random over time
-    epsilon_decay = 0.995
-    max_episodes = 500
-
-    print("Neurotonomous - Training started...")
-
+    epsilon_decay = 0.9  # faster decay
+    max_episodes = 30
+    
     episode = 0
     while episode < max_episodes:
         car = Car(WIDTH // 2, HEIGHT // 2, random.randint(0, 360))
@@ -196,13 +194,14 @@ def main():
             total_reward += reward
 
             replay_buffer.append((state, action, reward, next_state)) # stores experience in replay buffer
-            train(model, optimizer, replay_buffer) # trains the Q-Network with a batch of experiences from the replay buffer
+            train(model, optimizer, replay_buffer, batch_size=64, gamma=0.99)
+            train(model, optimizer, replay_buffer, batch_size=64, gamma=0.99)  #second call for faster learning # trains the Q-Network
 
             done = crashed or steps > 1000 # ends episode if crashed or max steps reached
             steps += 1
             clock.tick(60)
 
-        epsilon = max(0.1, epsilon * epsilon_decay) # decays epsilon after each episode
+        epsilon = max(0.01, epsilon * epsilon_decay) # decays epsilon after each episode
         print(f"Episode {episode}: Reward {total_reward:.1f}, Steps {steps}, Epsilon {epsilon:.3f}")
         episode += 1
 
