@@ -17,7 +17,7 @@ The agent starts with completely random actions and, through trial-and-error rei
 - Post-training demo mode showcasing learned behavior
 
 ## Demo
-After ~500 training episodes (or ~30 in quick mode), the car learns to:
+After ~30 training episodes, the car learns to:
 - Avoid walls proactively
 - Turn toward open spaces
 - Survive hundreds of steps in dense random layouts
